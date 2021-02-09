@@ -29,8 +29,6 @@ class PoseKeyDetection:
         # detect key_points
         crop = cv2.resize(crop, self.det_sz)
         pose = self.key_point_detector.detect(img=crop)
-
-        # write to csv data
         if pose is not None:
             key_points = pose.transform(rx=rx, ry=ry, dx=dx, dy=dy)
 
@@ -88,10 +86,6 @@ class PoseKeyDetection:
             left, top, right, bottom = coordinates
             if right > im_w - 10 or left < 10:
                 pass
-            # left = max(int((left - POSE_MARGIN_X * im_w)), 0)
-            # top = max(int((top - POSE_MARGIN_Y * im_h)), 0)
-            # right = min(int((right + POSE_MARGIN_X * im_w)), im_w)
-            # bottom = min(int((bottom + POSE_MARGIN_Y * im_h)), im_h)
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
             x_bar = 0.5 * (left + right)
             y_bar = 0.5 * (top + bottom)

@@ -28,3 +28,7 @@ class CocoPose:
 
         self.key_points = key_points
         return self.key_points
+
+
+if __name__ == '__main__':
+    CocoPose(key_points={}).transform()

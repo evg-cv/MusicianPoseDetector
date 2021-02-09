@@ -1,9 +1,13 @@
+import os
 import time
 import cv2
+import math
+import matplotlib.pyplot as plt
 
+from ast import literal_eval
 from src.detector.pose import PoseKeyDetection
 from utils.tool import draw_key_points
-from settings import TRACK_QUALITY, PERSON_TRACK_CYCLE, LOCAL
+from settings import TRACK_QUALITY, PERSON_TRACK_CYCLE, LOCAL, CUR_DIR
 
 
 class PoseAnalyzer:
@@ -11,20 +15,13 @@ class PoseAnalyzer:
     def __init__(self, model_name='resnet101'):
         self.model_name = model_name
         self.class_pose_key = PoseKeyDetection(model_name=model_name, det_sz=None)
-        # self.class_anal = Analyzer()
         self.graph = {}
         self.person_trackers = {}
         self.current_person_id = 1
         self.person_attributes = {}
-        # self.font = ImageFont.truetype("font/arial.ttf", 20)
-
-        # self.img_logo = cv2.resize(cv2.imread('logo/logo.png'), None, fx=LOGO_RESIZE, fy=LOGO_RESIZE)
 
     def detect_key_points(self, file_video):
         cap = cv2.VideoCapture(file_video)
-        frame_pos_list = []
-        key_points_list = []
-
         length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         cnt = 0
@@ -84,15 +81,64 @@ class PoseAnalyzer:
                 pd.DataFrame(key_points, columns=headers).to_csv(f"musician_{fid}_key_points.csv",
                                                                  header=True, index=False, mode="w")
 
-        return frame_pos_list, key_points_list
+        return
+
+    def analyze_pose_attributes(self):
+        person_key_points = {}
+        if LOCAL:
+            import pandas as pd
+            person_key_points["Musician1"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
+                                                         "musician_1_key_points.csv")
+            person_key_points["Musician2"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
+                                                         "musician_2_key_points.csv")
+            person_key_points["Musician3"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
+                                                         "musician_3_key_points.csv")
+            person_key_points["Musician4"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
+                                                         "musician_4_key_points.csv")
+        else:
+            for fid in self.person_attributes.keys():
+                person_key_points[f"Musician{fid}"] = self.person_attributes[fid]["key_points"]
+
+        pose_analysis = {}
+        for p_key in person_key_points.keys():
+            pose_analysis[p_key] = []
+            if LOCAL:
+                init_key_points = person_key_points[p_key].loc[0, :].values.tolist()
+                rest_key_points = person_key_points[p_key].loc[1:, :].values.tolist()
+            else:
+                init_key_points = person_key_points[p_key][0]
+                rest_key_points = person_key_points[p_key][1:]
+            for key_points in rest_key_points:
+                frame_diff = 0
+                for i_key_point, key_point in zip(init_key_points, key_points):
+                    if LOCAL:
+                        i_x, i_y, _ = literal_eval(i_key_point)
+                        x, y, _ = literal_eval(key_point)
+                    else:
+                        i_x, i_y, _ = i_key_point
+                        x, y, _ = key_point
+                    frame_diff += math.sqrt((i_x - x) ** 2 + (i_y - y) ** 2)
+                frame_diff /= 17
+                pose_analysis[p_key].append(frame_diff)
+
+        output_graph = os.path.join(CUR_DIR, "result.jpg")
+        legends = list(pose_analysis.keys())
+        figure, ax = plt.subplots()
+        for a_key in pose_analysis.keys():
+            plt.plot(pose_analysis[a_key], linewidth=3.0)
+        plt.legend(legends, fontsize=8)
+        plt.xlabel('Frames', fontsize=16)
+        plt.ylabel('Average Motion', fontsize=16)
+        plt.title('Average Motion - Frame per Musician', fontsize=16)
+        plt.show()
+        figure.savefig(output_graph)
+        print(f"[INFO] Successfully saved the result graph in {output_graph}")
+
+        return
 
 
 if __name__ == '__main__':
-    # ---------------------- source --------------------------------------------------------------------------
-    video_path1 = '/media/main/Data/Task/MusicianPoseDetector/yt1s.com - URMP  32  The Art of the Fugue_v720P.mp4'
-
-    # crop_mode = [100, 0, 620, 700]
+    video_path1 = ''
     crop_mode = 'adaptive'
-    # crop_mode = 'full'
     class_main = PoseAnalyzer('resnet101')
-    class_main.detect_key_points(file_video=video_path1)
+    class_main.analyze_pose_attributes()

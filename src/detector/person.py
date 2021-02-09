@@ -48,14 +48,14 @@ class PersonDetector:
                 detect_rect_list.append([x1, y1, x2, y2])
                 detect_score_list.append(scores[0][i])
                 detect_class_list.append(classes[0][i])
+        sorted_detect_list = sorted(detect_rect_list, key=lambda k: k[0])
 
-        return detect_rect_list, detect_score_list, detect_class_list
+        return sorted_detect_list, detect_score_list, detect_class_list
 
 
 if __name__ == '__main__':
 
-    cap = cv2.VideoCapture("/media/main/Data/Task/MusicianPoseDetector/yt1s.com - URMP  32  The Art of the "
-                           "Fugue_v720P.mp4")
+    cap = cv2.VideoCapture("")
     person_detector = PersonDetector()
 
     while True:
