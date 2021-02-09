@@ -80,13 +80,19 @@ class PoseKeyDetection:
     def process_frame(self, frame, trackers, attributes, person_id):
         im_h, im_w = frame.shape[:2]
         rect_list, _, _ = self.people_detector.detect_from_images(frame)
+        filter_ids = non_max_suppression_slow(boxes=np.array(rect_list), keys=range(len(rect_list)))
+        new_rect_list = []
+        for i, r_list in enumerate(rect_list):
+            if i not in filter_ids:
+                new_rect_list.append(r_list)
+
         detected_centers = []
 
-        for coordinates in rect_list:
+        for coordinates in new_rect_list:
             left, top, right, bottom = coordinates
             if right > im_w - 10 or left < 10:
                 pass
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            # cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
             x_bar = 0.5 * (left + right)
             y_bar = 0.5 * (top + bottom)
             detected_centers.append([left, top, right, bottom])
@@ -114,7 +120,7 @@ class PoseKeyDetection:
                 if t_left <= x_bar <= t_right and t_top <= y_bar <= t_bottom and left <= t_x_bar <= right \
                         and top <= t_y_bar <= bottom:
                     matched_fid = fid
-                    trackers.pop(fid)
+                    # trackers.pop(fid)
                     tracker = dlib.correlation_tracker()
                     tracker.start_track(frame, dlib.rectangle(left - MARGIN, top - MARGIN, right + MARGIN,
                                                               bottom + MARGIN))

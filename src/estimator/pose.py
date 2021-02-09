@@ -87,14 +87,10 @@ class PoseAnalyzer:
         person_key_points = {}
         if LOCAL:
             import pandas as pd
-            person_key_points["Musician1"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
-                                                         "musician_1_key_points.csv")
-            person_key_points["Musician2"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
-                                                         "musician_2_key_points.csv")
-            person_key_points["Musician3"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
-                                                         "musician_3_key_points.csv")
-            person_key_points["Musician4"] = pd.read_csv("/media/main/Data/Task/MusicianPoseDetector/src/estimator/"
-                                                         "musician_4_key_points.csv")
+            person_key_points["Musician1"] = pd.read_csv(os.path.join(CUR_DIR, "musician_1_key_points.csv"))
+            person_key_points["Musician2"] = pd.read_csv(os.path.join(CUR_DIR, "musician_2_key_points.csv"))
+            person_key_points["Musician3"] = pd.read_csv(os.path.join(CUR_DIR, "musician_3_key_points.csv"))
+            person_key_points["Musician4"] = pd.read_csv(os.path.join(CUR_DIR, "musician_4_key_points.csv"))
         else:
             for fid in self.person_attributes.keys():
                 person_key_points[f"Musician{fid}"] = self.person_attributes[fid]["key_points"]
@@ -141,4 +137,5 @@ if __name__ == '__main__':
     video_path1 = ''
     crop_mode = 'adaptive'
     class_main = PoseAnalyzer('resnet101')
-    class_main.analyze_pose_attributes()
+    class_main.detect_key_points(file_video=video_path1)
+    # class_main.analyze_pose_attributes()
