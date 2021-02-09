@@ -66,7 +66,8 @@ class PoseKeyDetection:
             key_points = self.detect_key_points(frame=person_frame, top=t_top, bottom=t_bottom, left=t_left,
                                                 right=t_right, im_w=width, im_h=height)
 
-            attributes[fid]["key_points"].append(key_points)
+            if key_points is not None:
+                attributes[fid]["key_points"].append(key_points)
 
             # cv2.circle(person_frame, (t_center_x, t_center_y), CIRCLE_RADIUS, (0, 0, 255), -1)
             # cv2.rectangle(person_frame, (int(w_ratio * t_left), int(h_ratio * t_top)),
@@ -126,7 +127,8 @@ class PoseKeyDetection:
                                                               bottom + MARGIN))
                     trackers[matched_fid] = tracker
                     attributes[matched_fid]["undetected"] = 0
-                    attributes[matched_fid]["key_points"].append(key_points)
+                    if key_points is not None:
+                        attributes[matched_fid]["key_points"].append(key_points)
 
                     # cv2.circle(frame, (t_x_bar, t_y_bar), CIRCLE_RADIUS, (0, 0, 255), -1)
                     # cv2.rectangle(show_img, (int(w_ratio * t_left), int(h_ratio * t_top)),
@@ -146,7 +148,10 @@ class PoseKeyDetection:
                 temp_dict = collections.defaultdict()
                 temp_dict["id"] = str(person_id)
                 temp_dict["undetected"] = 0
-                temp_dict["key_points"] = [key_points]
+                if key_points is not None:
+                    temp_dict["key_points"] = [key_points]
+                else:
+                    temp_dict["key_points"] = []
                 attributes[person_id] = temp_dict
                 # cv2.circle(frame, (x_bar, y_bar), CIRCLE_RADIUS, (0, 0, 255), -1)
                 # cv2.rectangle(show_img, (int(w_ratio * left), int(h_ratio * top)),

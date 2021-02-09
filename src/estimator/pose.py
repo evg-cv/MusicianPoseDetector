@@ -78,8 +78,8 @@ class PoseAnalyzer:
             for fid in self.person_attributes.keys():
                 key_points = self.person_attributes[fid]["key_points"]
                 headers = [f"KeyPoint{i}" for i in range(17)]
-                pd.DataFrame(key_points, columns=headers).to_csv(f"musician_{fid}_key_points.csv",
-                                                                 header=True, index=False, mode="w")
+                pd.DataFrame(key_points, columns=headers).to_csv(
+                    os.path.join(CUR_DIR, f"musician_{fid}_key_points.csv"), header=True, index=False, mode="w")
 
         return
 
