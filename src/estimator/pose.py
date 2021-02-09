@@ -30,44 +30,49 @@ class PoseAnalyzer:
         cnt = 0
 
         while cap.isOpened():
-            t1 = time.time()
-            ret, frame = cap.read()
-            if not ret:
-                break
-            fids_to_delete = []
-            for fid in self.person_trackers.keys():
-                tracking_quality = self.person_trackers[fid].update(frame)
+            try:
+                t1 = time.time()
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                fids_to_delete = []
+                for fid in self.person_trackers.keys():
+                    tracking_quality = self.person_trackers[fid].update(frame)
 
-                # If the tracking quality is good enough, we must delete this tracker
-                if tracking_quality < TRACK_QUALITY:
-                    fids_to_delete.append(fid)
+                    # If the tracking quality is good enough, we must delete this tracker
+                    if tracking_quality < TRACK_QUALITY:
+                        fids_to_delete.append(fid)
 
-            for fid in fids_to_delete:
-                print("Removing fid " + str(fid) + " from list of trackers")
-                self.person_trackers.pop(fid, None)
-                self.person_attributes.pop(fid, None)
-            if cnt % PERSON_TRACK_CYCLE == 0:
-                self.person_trackers, self.person_attributes, self.current_person_id, result_img = \
-                    self.class_pose_key.process_frame(frame=frame, trackers=self.person_trackers,
-                                                      attributes=self.person_attributes,
-                                                      person_id=self.current_person_id)
-            else:
-                result_img, self.person_attributes = \
-                    self.class_pose_key.track_persons(person_frame=frame, trackers=self.person_trackers,
-                                                      attributes=self.person_attributes)
-            img_key_point = result_img
-            # ------------------------ draw result ---------------------
-            for fid in self.person_attributes.keys():
-                key_points = self.person_attributes[fid]["key_points"][-1]
-                img_key_point = draw_key_points(img_key_point, key_points=key_points)
-                # img_key_point = cv2.rectangle(img_key_point, (crop[0], crop[1]), (crop[2], crop[3]), (0, 255, 0), 2)
+                for fid in fids_to_delete:
+                    print("Removing fid " + str(fid) + " from list of trackers")
+                    self.person_trackers.pop(fid, None)
+                    self.person_attributes.pop(fid, None)
+                if cnt % PERSON_TRACK_CYCLE == 0:
+                    self.person_trackers, self.person_attributes, self.current_person_id, result_img = \
+                        self.class_pose_key.process_frame(frame=frame, trackers=self.person_trackers,
+                                                          attributes=self.person_attributes,
+                                                          person_id=self.current_person_id)
+                else:
+                    result_img, self.person_attributes = \
+                        self.class_pose_key.track_persons(person_frame=frame, trackers=self.person_trackers,
+                                                          attributes=self.person_attributes)
+                img_key_point = result_img
+                # ------------------------ draw result ---------------------
+                for fid in self.person_attributes.keys():
+                    key_points = self.person_attributes[fid]["key_points"][-1]
+                    img_key_point = draw_key_points(img_key_point, key_points=key_points)
+                    # img_key_point = cv2.rectangle(img_key_point, (crop[0], crop[1]), (crop[2], crop[3]), (0, 255,
+                    # 0), 2)
 
-            cv2.imshow("Keypoints", img_key_point)
-            print('Frame: {}/{}, Process time: {}'.format(cnt, length, time.time() - t1))
-            cnt += 1
+                cv2.imshow("Keypoints", img_key_point)
+                print('Frame: {}/{}, Process time: {}'.format(cnt, length, time.time() - t1))
+                cnt += 1
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):  # press q to quit
-                break
+                if cv2.waitKey(1) & 0xFF == ord('q'):  # press q to quit
+                    break
+            except Exception as e:
+                print(cnt, e)
+                continue
         # kill open cv things
         cap.release()
         cv2.destroyAllWindows()
