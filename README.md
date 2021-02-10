@@ -42,6 +42,8 @@ OpenCV libraries are used in this project.
         pip3 install -r requirements.txt  
     ```
 
+- Please create the "model" folder in "utils" folder and copy the model into "model" folder.
+
 ## Execution
 
 - Please set VIDEO_PATH variable in settings file with the full path of video file to process
