@@ -1,6 +1,10 @@
 import os
 
+from utils.folder_file_manager import make_directory_if_not_exists
+
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = make_directory_if_not_exists(os.path.join(CUR_DIR, 'output'))
+
 PERSON_MODEL_PATH = os.path.join(CUR_DIR, 'utils', 'model', 'frozen_inference_graph.pb')
 
 # -------------------------- KEYPOINTS --------------------------------------------------------------
@@ -54,5 +58,6 @@ CIRCLE_RADIUS = 8
 TRACK_QUALITY = 2
 PERSON_TRACK_CYCLE = 20
 
-LOCAL = False
+LOCAL = True
 VIDEO_PATH = ""
+FILE_NAME = ""

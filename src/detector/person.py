@@ -64,7 +64,7 @@ if __name__ == '__main__':
         for rect in rects:
             left, top, right, bottom = rect
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-        cv2.imshow("person", frame)
+        # cv2.imshow("person", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):  # press q to quit
             break
     cap.release()

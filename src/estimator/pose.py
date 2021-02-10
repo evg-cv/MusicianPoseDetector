@@ -1,13 +1,16 @@
 import os
+import glob
+import ntpath
 import time
 import cv2
 import math
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from ast import literal_eval
 from src.detector.pose import PoseKeyDetection
 from utils.tool import draw_key_points
-from settings import TRACK_QUALITY, PERSON_TRACK_CYCLE, LOCAL, CUR_DIR
+from settings import TRACK_QUALITY, PERSON_TRACK_CYCLE, LOCAL, OUTPUT_DIR
 
 
 class PoseAnalyzer:
@@ -20,7 +23,7 @@ class PoseAnalyzer:
         self.current_person_id = 1
         self.person_attributes = {}
 
-    def detect_key_points(self, file_video):
+    def detect_key_points(self, file_video, file_name):
         cap = cv2.VideoCapture(file_video)
         length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
@@ -61,7 +64,7 @@ class PoseAnalyzer:
                     # img_key_point = cv2.rectangle(img_key_point, (crop[0], crop[1]), (crop[2], crop[3]), (0, 255,
                     # 0), 2)
 
-                cv2.imshow("Keypoints", img_key_point)
+                # cv2.imshow("Keypoints", img_key_point)
                 print('Frame: {}/{}, Process time: {}'.format(cnt, length, time.time() - t1))
                 cnt += 1
 
@@ -74,23 +77,20 @@ class PoseAnalyzer:
         cap.release()
         cv2.destroyAllWindows()
         if LOCAL:
-            import pandas as pd
             for fid in self.person_attributes.keys():
                 key_points = self.person_attributes[fid]["key_points"]
                 headers = [f"KeyPoint{i}" for i in range(17)]
                 pd.DataFrame(key_points, columns=headers).to_csv(
-                    os.path.join(CUR_DIR, f"musician_{fid}_key_points.csv"), header=True, index=False, mode="w")
+                    os.path.join(OUTPUT_DIR, f"{file_name}_{fid}_key_points.csv"), header=True, index=False, mode="w")
 
         return
 
     def analyze_pose_attributes(self):
         person_key_points = {}
         if LOCAL:
-            import pandas as pd
-            person_key_points["Musician1"] = pd.read_csv(os.path.join(CUR_DIR, "musician_1_key_points.csv"))
-            person_key_points["Musician2"] = pd.read_csv(os.path.join(CUR_DIR, "musician_2_key_points.csv"))
-            person_key_points["Musician3"] = pd.read_csv(os.path.join(CUR_DIR, "musician_3_key_points.csv"))
-            person_key_points["Musician4"] = pd.read_csv(os.path.join(CUR_DIR, "musician_4_key_points.csv"))
+            for key_file in glob.glob(os.path.join(OUTPUT_DIR, "*.csv")):
+                file_name = ntpath.basename(key_file).replace(".csv", "")
+                person_key_points[file_name] = pd.read_csv(key_file)
         else:
             for fid in self.person_attributes.keys():
                 person_key_points[f"Musician{fid}"] = self.person_attributes[fid]["key_points"]
@@ -117,7 +117,7 @@ class PoseAnalyzer:
                 frame_diff /= 17
                 pose_analysis[p_key].append(frame_diff)
 
-        output_graph = os.path.join(CUR_DIR, "result.jpg")
+        output_graph = os.path.join(OUTPUT_DIR, "result.jpg")
         legends = list(pose_analysis.keys())
         figure, ax = plt.subplots()
         for a_key in pose_analysis.keys():
@@ -137,5 +137,5 @@ if __name__ == '__main__':
     video_path1 = ''
     crop_mode = 'adaptive'
     class_main = PoseAnalyzer('resnet101')
-    class_main.detect_key_points(file_video=video_path1)
+    class_main.detect_key_points(file_video=video_path1, file_name="")
     # class_main.analyze_pose_attributes()
