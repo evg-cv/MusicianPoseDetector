@@ -22,10 +22,12 @@ class PoseAnalyzer:
         self.person_trackers = {}
         self.current_person_id = 1
         self.person_attributes = {}
+        self.fps = 1
 
     def detect_key_points(self, file_video, file_name):
         cap = cv2.VideoCapture(file_video)
         length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.fps = cap.get(cv2.CAP_PROP_FPS)
 
         cnt = 0
 
@@ -120,12 +122,15 @@ class PoseAnalyzer:
         output_graph = os.path.join(OUTPUT_DIR, "result.jpg")
         legends = list(pose_analysis.keys())
         figure, ax = plt.subplots()
+        analyzed_frames = 0
         for a_key in pose_analysis.keys():
+            analyzed_frames = len(pose_analysis[a_key])
             plt.plot(pose_analysis[a_key], linewidth=3.0)
         plt.legend(legends, fontsize=8)
+        plt.xlim([0, analyzed_frames / self.fps])
         plt.xlabel('Frames', fontsize=16)
         plt.ylabel('Average Motion', fontsize=16)
-        plt.title('Average Motion - Frame per Musician', fontsize=16)
+        plt.title('Average Motion - Seconds per Musician', fontsize=16)
         plt.show()
         figure.savefig(output_graph)
         print(f"[INFO] Successfully saved the result graph in {output_graph}")
