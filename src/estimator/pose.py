@@ -125,6 +125,7 @@ class PoseAnalyzer:
         analyzed_frames = 0
         for a_key in pose_analysis.keys():
             analyzed_frames = len(pose_analysis[a_key])
+            pd.DataFrame(pose_analysis[a_key]).to_csv(os.path.join(OUTPUT_DIR, f"{a_key}_avg_motion.csv"))
             plt.plot(pose_analysis[a_key], linewidth=3.0)
         plt.legend(legends, fontsize=8)
         plt.xlim([0, analyzed_frames / self.fps])
