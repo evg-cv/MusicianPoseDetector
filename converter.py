@@ -4,8 +4,8 @@ import ntpath
 import pandas as pd
 
 
-avg_motion_csv_files_dir = "/media/main/Data/Task/MusicianPoseDetector/test"
-reference_file_path = "/media/main/Data/Task/MusicianPoseDetector/1.csv"
+avg_motion_csv_files_dir = "/media/main/Data/Task/MusicianPoseDetector/3/avg"
+reference_file_path = "/media/main/Data/Task/MusicianPoseDetector/3/3.csv"
 output_csv_file_path = "convert.csv"
 
 
@@ -25,7 +25,10 @@ def convert_average_motion():
                 result[f"person_{person_id}"].append(avg_motion_val)
                 if j == 0:
                     result["time"].append(0.1 * cnt)
-                    result["beat"].append(beat_contents[cnt])
+                    if cnt >= len(beat_contents):
+                        result["beat"].append(0)
+                    else:
+                        result["beat"].append(beat_contents[cnt])
                     cnt += 1
 
     pd.DataFrame(result, columns=list(result.keys())).to_csv(output_csv_file_path, header=True, index=True, mode='w')
