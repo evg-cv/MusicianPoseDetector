@@ -4,8 +4,8 @@ import ntpath
 import pandas as pd
 
 
-avg_motion_csv_files_dir = "/media/main/Data/Task/MusicianPoseDetector/3/avg"
-reference_file_path = "/media/main/Data/Task/MusicianPoseDetector/3/3.csv"
+avg_motion_csv_files_dir = "/media/main/Data/Task/MusicianPoseDetector/43/avg"
+reference_file_path = "/media/main/Data/Task/MusicianPoseDetector/43/43.csv"
 output_csv_file_path = "convert.csv"
 
 
@@ -30,6 +30,12 @@ def convert_average_motion():
                     else:
                         result["beat"].append(beat_contents[cnt])
                     cnt += 1
+        lens = []
+        for r_key in result.keys():
+            lens.append(len(result[r_key]))
+        correction_len = min(lens)
+        for r_key in result.keys():
+            result[r_key] = result[r_key][:correction_len]
 
     pd.DataFrame(result, columns=list(result.keys())).to_csv(output_csv_file_path, header=True, index=True, mode='w')
     print(f"[INFO] Successfully saved in {output_csv_file_path}")
