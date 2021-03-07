@@ -2,6 +2,7 @@ import os
 import glob
 import ntpath
 import time
+import numpy as np
 import cv2
 import math
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ import pandas as pd
 from ast import literal_eval
 from src.detector.pose import PoseKeyDetection
 from utils.tool import draw_key_points
-from settings import TRACK_QUALITY, PERSON_TRACK_CYCLE, LOCAL, OUTPUT_DIR
+from settings import TRACK_QUALITY, PERSON_TRACK_CYCLE, LOCAL, OUTPUT_DIR, CHOICE
 
 
 class PoseAnalyzer:
@@ -89,6 +90,7 @@ class PoseAnalyzer:
 
     def analyze_pose_attributes(self):
         person_key_points = {}
+        pose_analysis = {}
         if LOCAL:
             for key_file in glob.glob(os.path.join(OUTPUT_DIR, "*.csv")):
                 file_name = ntpath.basename(key_file).replace(".csv", "")
@@ -96,28 +98,50 @@ class PoseAnalyzer:
         else:
             for fid in self.person_attributes.keys():
                 person_key_points[f"Musician{fid}"] = self.person_attributes[fid]["key_points"]
-
-        pose_analysis = {}
-        for p_key in person_key_points.keys():
-            pose_analysis[p_key] = []
-            if LOCAL:
-                init_key_points = person_key_points[p_key].loc[0, :].values.tolist()
-                rest_key_points = person_key_points[p_key].loc[1:, :].values.tolist()
-            else:
-                init_key_points = person_key_points[p_key][0]
-                rest_key_points = person_key_points[p_key][1:]
-            for key_points in rest_key_points:
-                frame_diff = 0
-                for i_key_point, key_point in zip(init_key_points, key_points):
-                    if LOCAL:
-                        i_x, i_y, _ = literal_eval(i_key_point)
-                        x, y, _ = literal_eval(key_point)
-                    else:
-                        i_x, i_y, _ = i_key_point
-                        x, y, _ = key_point
-                    frame_diff += math.sqrt((i_x - x) ** 2 + (i_y - y) ** 2)
-                frame_diff /= 17
-                pose_analysis[p_key].append(frame_diff)
+        if CHOICE == 1:
+            for p_key in person_key_points.keys():
+                pose_analysis[p_key] = []
+                if LOCAL:
+                    init_key_points = person_key_points[p_key].loc[0, :].values.tolist()
+                    rest_key_points = person_key_points[p_key].loc[1:, :].values.tolist()
+                else:
+                    init_key_points = person_key_points[p_key][0]
+                    rest_key_points = person_key_points[p_key][1:]
+                for key_points in rest_key_points:
+                    frame_diff = 0
+                    for i_key_point, key_point in zip(init_key_points, key_points):
+                        if LOCAL:
+                            i_x, i_y, _ = literal_eval(i_key_point)
+                            x, y, _ = literal_eval(key_point)
+                        else:
+                            i_x, i_y, _ = i_key_point
+                            x, y, _ = key_point
+                        frame_diff += math.sqrt((i_x - x) ** 2 + (i_y - y) ** 2)
+                    frame_diff /= 17
+                    pose_analysis[p_key].append(frame_diff)
+        else:
+            person_key_points_np = {}
+            for musician in person_key_points:
+                person_key_points_np[musician] = {}
+                for keys in person_key_points[musician]:
+                    person_key_points_np[musician][keys] = np.array(
+                        [np.array(xi) for xi in person_key_points[musician][keys].apply(literal_eval)])
+            xy_pose_diff = {}
+            for musician in person_key_points:
+                xy_pose_diff[musician] = {}
+                for keys in person_key_points[musician]:
+                    xy_pose_diff[musician][keys] = np.diff(person_key_points_np[musician][keys][:, 0:2], axis=0)
+            pose_diff_magnitudes = {}
+            for musician in person_key_points:
+                pose_diff_magnitudes[musician] = {}
+                for keys in person_key_points[musician]:
+                    pose_diff_magnitudes[musician][keys] = np.sqrt(
+                        np.square(xy_pose_diff[musician][keys][:, 0]) + np.square(xy_pose_diff[musician][keys][:, 1]))
+            for musician in person_key_points:
+                sum_keys = np.zeros(pose_diff_magnitudes[musician]['KeyPoint0'].shape)
+                for keys in person_key_points[musician]:
+                    sum_keys += pose_diff_magnitudes[musician][keys]
+                pose_analysis[musician] = sum_keys / 17
 
         output_graph = os.path.join(OUTPUT_DIR, "result.jpg")
         legends = list(pose_analysis.keys())
